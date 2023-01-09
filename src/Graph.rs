@@ -1,3 +1,12 @@
+/*
+    TODO:
+    outE() is not passing tests
+    inE() no tests
+    out() returns outgoing vertices
+    in() returns ingoing vertices
+    drop() remove a vertex (including ingoing and outgoing relationships)
+ */
+
 struct Graph {
     name: String,
     vertices: Vec<Vertex>,
@@ -17,9 +26,14 @@ struct Vertex {
 
 trait VecExt {
     fn has(&self, property_name: &str, property_value: &str) -> Vec<&Vertex>;
+    /// returns a vector of vertices that have a given edge
+    /// those vertices are the 'from' vertices of this edge
+    fn outE(&self, edge_name: &str) -> Vec<&Edge>;
+    fn inE(&self, edge_name: &str) -> Vec<&Edge>;
 }
 
 impl VecExt for Vec<Vertex> {
+    /// returns a vector of vertices that have the given property name
     fn has(&self, property_name: &str, property_value: &str) -> Vec<&Vertex> {
         let mut matching_vertices = Vec::new();
         for vertex in self.iter() {
@@ -30,6 +44,34 @@ impl VecExt for Vec<Vertex> {
             }
         }
         matching_vertices
+    }
+
+    /// returns a vector of vertices that have a given edge
+    /// those vertices are the 'from' vertices of this edge
+    fn outE(&self, edge_name: &str) -> Vec<&Edge> {
+        let mut matching_edges = Vec::new();
+        for vertex in self.iter() {
+            for edge in vertex.edges.iter() {
+                if edge.from == vertex.name && edge.name == edge_name {
+                    matching_edges.push(edge);
+                }
+            }
+        }
+        matching_edges
+    }
+
+    /// returns a vector of vertices that have a given edge
+    /// those vertices are the 'to' vertices of this edge
+    fn inE(&self, edge_name: &str) -> Vec<&Edge> {
+        let mut matching_edges = Vec::new();
+        for vertex in self.iter() {
+            for edge in vertex.edges.iter() {
+                if edge.to == vertex.name && edge.name == edge_name {
+                    matching_edges.push(edge);
+                }
+            }
+        }
+        matching_edges
     }
 }
 
@@ -171,5 +213,18 @@ mod tests {
         graph.addE(String::from("edge")).from(String::from("source")).to(String::from("target"));
         assert_eq!(graph.V().has("name", "target").len(), 2);
         assert_eq!(graph.V().has("name", "no one").len(), 0);
+    }
+
+    #[test]
+    fn out_e_returns_matching_edges() {
+        let mut graph = Graph::new(String::from("test"));
+        graph.addV(String::from("from"));
+        graph.addV(String::from("to"));
+        graph.addE(String::from("edge")).from(String::from("from")).to(String::from("to"));
+        graph.addE(String::from("edge2")).from(String::from("from")).to(String::from("to"));
+        graph.addE(String::from("edge2")).from(String::from("to")).to(String::from("from"));
+        assert_eq!(graph.V().outE("edge").len(), 1);
+        assert_eq!(graph.V().outE("edge2").len(), 2);
+        assert_eq!(graph.V().outE("no edge").len(), 0);
     }
 }
